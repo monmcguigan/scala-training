@@ -107,7 +107,7 @@ object Decoder {
       }
       val resList = data.map(json => json.as[A]) // give me a list of Decoded Results
       val initialList = List.empty[A]
-      loop(resList, Right(initialList).map(_.reverse))
+      loop(resList, Right(initialList)).map(_.reverse)
   }.withErr("Could not decode Json Array to List")
 
   implicit def vectorDecoder[A: Decoder]: Decoder[Vector[A]] = listDecoder[A].withErr("Could not decode Json Array to Vector").map(_.toVector)
