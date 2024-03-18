@@ -12,7 +12,7 @@ object Parser {
 
   def pred(cond: Char => Boolean): Parser[Char] = Parser.from {
     input =>
-      if(input.nonEmpty && cond(input.head))
+      if (input.nonEmpty && cond(input.head))
         Success(input.head, input.drop(1))
       else
         Failure(s"Unable to parse input: ${input}")
@@ -23,11 +23,11 @@ object Parser {
 
   def string(expected: String): Parser[String] = {
     expected.map(Parser.char).foldLeft(Parser.pure("")) {
-    (headParser, tailParser) =>
-      headParser.map2(tailParser) {
-        (head, tail) => head + tail
-      }
-   }
+      (headParser, tailParser) =>
+        headParser.map2(tailParser) {
+          (head, tail) => head + tail
+        }
+    }
   }
 
   def pure[A](a: A): Parser[A] = from { in => Success(a, in) }
@@ -35,15 +35,17 @@ object Parser {
   val digit: Parser[Int] = pred(('0' to '9').toSet.contains(_)).map(c => c.toString.toInt)
 
   def number: Parser[Int] = digit.rep.map(_.foldLeft(0) { (curr, digit) => curr * 10 + digit })
+
   def boolean: Parser[Boolean] = {
     string("true").as(true) | string("false").as(false)
   }
-  def parseName(firstName: String, secondName: String): Parser[(String, String)] = (string(firstName) <* whiteSpace.rep0) ~ string(secondName)
 
-  private def whiteSpace = pred(_.isWhitespace)
+  def whitespace: Parser[Char] = pred(_.isWhitespace)
 
   def listContent: Parser[List[String]] = alphaNumeric.repSep0(", ")
-  def alphaNumeric: Parser[String] = (alphaNumericChar | whiteSpace).rep0.map(_.mkString)
+
+  def alphaNumeric: Parser[String] = (alphaNumericChar | whitespace).rep0.map(_.mkString)
+
   def alphaNumericChar: Parser[Char] = pred(c => c.isLetterOrDigit)
 }
 
@@ -79,21 +81,12 @@ sealed trait Parser[A] {
       }
   }
 
-  def ~[B](other: => Parser[B]): Parser[(A, B)] = Parser.from {
-    input =>
-      parse(input) match {
-        case Success(inA, restA) => other.parse(restA) match {
-          case Success(inB, rest) => Success((inA, inB), rest)
-          case Failure(errMessage) => Failure(s"inner error ${errMessage}")
-        }
-        case Failure(errMessage) => Failure(s"outer error ${errMessage}")
-      }
-  }
+  // andThen - parse with Parser[A] and then Parser[B]
+  def ~[B](other: => Parser[B]): Parser[(A, B)] = map2(other)((a, b) => (a, b))
 
   def rep: Parser[List[A]] = this.map2(rep0) { (a, as) => a :: as }
 
   def rep0: Parser[List[A]] = rep | pure(List.empty)
-
 
   def *>[B](other: => Parser[B]): Parser[B] = map2(other)((_, b) => b)
 

@@ -1,5 +1,6 @@
 package com.jpmc.parsecs
 
+import com.jpmc.parsecs.Parser.{string, whitespace}
 import com.jpmc.parsecs.Result.Success
 import org.scalatest.freespec.AnyFreeSpec
 
@@ -53,7 +54,9 @@ class ParserTests extends AnyFreeSpec {
     "Success" in {
       val firstName  = "Monica"
       val lastName  = "McGuigan"
-      val result = Parser.parseName(firstName, lastName).parse("Monica  McGuigan")
+      def parseName(firstName: String, secondName: String): Parser[(String, String)] = (string(firstName) <* whitespace.rep0) ~ string(secondName)
+
+      val result = parseName(firstName, lastName).parse("MonicaMcGuigan")
       val expected = Success(("Monica", "McGuigan"), "")
       assert(result == expected)
     }
