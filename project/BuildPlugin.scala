@@ -20,7 +20,6 @@ object BuildPlugin extends AutoPlugin {
       "-language:implicitConversions",
       "-unchecked",
       "-Xcheckinit",
-      "-Xfatal-warnings",
       "-Xfuture",
       "-Xlint:adapted-args",
       "-Xlint:by-name-right-associative",
