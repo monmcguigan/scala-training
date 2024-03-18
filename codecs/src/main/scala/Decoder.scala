@@ -91,24 +91,39 @@ object Decoder {
   // Going from F[G[A]] to G[F[A]]
   // F = List
   // G = DecoderResult
+
+  // tail rec
   implicit def listDecoder[A: Decoder]: Decoder[List[A]] = fromPartial {
     case Json.Array(data) =>
       @tailrec
-      def loop(resList: List[DecoderResult[A]], acc: DecoderResult[List[A]]): DecoderResult[List[A]] = {
+      def loop(resList: List[Json], acc: List[A]): DecoderResult[List[A]] = {
         resList match {
-          case Nil => acc
+          case Nil => Right(acc)
           case head :: tail =>
-            val accumulating = for {
-              al <- acc
-              a <- head
-            } yield a :: al
-            loop(tail, accumulating)
+            head.as[A] match {
+              case Right(value) => loop(tail, acc :+ value)
+              case Left(_) => Left(DecoderErr("Could not decode Json Array to List"))
+            }
         }
       }
-      val resList = data.map(json => json.as[A]) // give me a list of Decoded Results
       val initialList = List.empty[A]
-      loop(resList, Right(initialList)).map(_.reverse)
-  }.withErr("Could not decode Json Array to List")
+      loop(data, initialList)
+  }
+
+  // foldLeft
+  //  import scala.:+
+  //  implicit def foldingListDecoder[A: Decoder]: Decoder[List[A]] = fromPartial {
+  //    case Json.Array(data) => data.foldLeft[DecoderResult[List[A]]](Right(List.empty[A])) {
+  //      case (acc, j) =>
+  //        j.as[A] match {
+  //          case Right(value) => acc.map(_ :+ value)
+  //          case Left(_) => Left(DecoderErr(s"Could not decode Json Array to List"))
+  //        }
+  //    }
+  //  }
+
+  // try to implement fold left in terms of fold right - chapter 3 red book
+  // fold is like a generalised version of natural recursion
 
   implicit def vectorDecoder[A: Decoder]: Decoder[Vector[A]] = listDecoder[A].withErr("Could not decode Json Array to Vector").map(_.toVector)
 
