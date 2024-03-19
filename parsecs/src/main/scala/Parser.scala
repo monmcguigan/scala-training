@@ -7,15 +7,14 @@ object Parser {
   def from[A](f: String => Result[A]): Parser[A] = new Parser[A] {
     override def parse(input: String): Result[A] = f(input)
   }
-
   // you had a non exhaustive pattern match
 
   def pred(cond: Char => Boolean): Parser[Char] = Parser.from {
     input =>
-      if (input.nonEmpty && cond(input.head))
-        Success(input.head, input.drop(1))
-      else
-        Failure(s"Unable to parse input: ${input}")
+      input.headOption match {
+        case Some(firstChar) if cond(firstChar) => Success(input.head, input.drop(1))
+        case _ => Failure(s"Unable to parse input: ${input}")
+      }
   }
   // for the boolean parser id like the err message to be better
 
@@ -34,7 +33,7 @@ object Parser {
 
   val digit: Parser[Int] = pred(('0' to '9').toSet.contains(_)).map(c => c.toString.toInt)
 
-  def number: Parser[Int] = digit.rep.map(_.foldLeft(0) { (curr, digit) => curr * 10 + digit })
+  val number: Parser[Int] = digit.rep.map(_.foldLeft(0) { (curr, digit) => curr * 10 + digit })
 
   def boolean: Parser[Boolean] = {
     string("true").as(true) | string("false").as(false)
@@ -44,7 +43,7 @@ object Parser {
 
   def listContent: Parser[List[String]] = alphaNumeric.repSep0(", ")
 
-  def alphaNumeric: Parser[String] = (alphaNumericChar | whitespace).rep0.map(_.mkString)
+  def alphaNumeric: Parser[String] = (alphaNumericChar | whitespace).rep.map(_.mkString)
 
   def alphaNumericChar: Parser[Char] = pred(c => c.isLetterOrDigit)
 }

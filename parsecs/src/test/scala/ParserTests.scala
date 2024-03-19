@@ -81,10 +81,11 @@ class ParserTests extends AnyFreeSpec {
       val expected = Success(List("s", "g", "h", "a"), "")
       assert(res == expected)
     }
-    "Empty List" in {
+    "Empty List [] - e.g. Json.Array(List())" in {
       val str = ""
       val res = Parser.listContent.parse(str)
       val expected = Success(List.empty[String], "")
+      assert(res.map(_.length) == expected.map(_.length))
       assert(res == expected)
     }
   }
