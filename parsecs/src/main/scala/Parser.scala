@@ -48,7 +48,7 @@ object Parser {
   def alphaNumericChar: Parser[Char] = pred(c => c.isLetterOrDigit)
 }
 
-sealed trait Parser[A] {
+sealed trait Parser[+A] {
   def parse(input: String): Result[A]
 
   def map[B](f: A => B): Parser[B] = Parser.from {
@@ -100,9 +100,9 @@ sealed trait Parser[A] {
   def repSep0(sep: String): Parser[List[A]] = repSep(sep) | pure(List.empty)
 }
 
-sealed trait Result[A] extends Product with Serializable {
+sealed trait Result[+A] extends Product with Serializable {
   def map[B](f: A => B): Result[B] = this match {
-    case Result.Success(value, rest) => Result.Success(f(value), rest)
+    case Result.Success(value: A, rest) => Result.Success(f(value), rest)
     case Result.Failure(errMessage) => Result.Failure(errMessage)
   }
 }
