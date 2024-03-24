@@ -1,5 +1,7 @@
 package com.jpmc.json
 
+import com.jpmc.json.JsonSeparators._
+
 sealed trait Json extends Product with Serializable
 
 object Json {
@@ -27,7 +29,6 @@ object Json {
   def apply(data: Json*): Doc = Array(data.toList)
 
   def prettyPrint(json: Json): java.lang.String = {
-    val quotes = "\""
     json match {
       case jsonDoc: Doc => prettyPrintDoc(jsonDoc)
       case Json.String(str) => quotes + str + quotes
@@ -38,20 +39,13 @@ object Json {
   }
 
   private def prettyPrintDoc(jsonDoc: Doc): java.lang.String = {
-    val separator = ", "
-    val openSquare = "["
-    val closeSquare = "]"
-    val quotes = "\""
-    val colon = ": "
-    val openCurly = "{"
-    val closeCurly = "}"
     jsonDoc match {
       case Array(data) =>
-        data.map(prettyPrint).mkString(openSquare, separator, closeSquare)
+        data.map(prettyPrint).mkString(openSquare, commaSep, closeSquare)
       case Object(data) =>
         data.map {
           case (key, value) => s"$quotes$key$quotes$colon${prettyPrint(value)}"
-        }.mkString(openCurly, separator, closeCurly)
+        }.mkString(openCurly, commaSep, closeCurly)
     }
   }
 
@@ -64,4 +58,13 @@ object Json {
       })
     }
   }
+}
+object JsonSeparators {
+  val commaSep = ", "
+  val openSquare = "["
+  val closeSquare = "]"
+  val quotes = "\""
+  val colon = ": "
+  val openCurly = "{"
+  val closeCurly = "}"
 }
