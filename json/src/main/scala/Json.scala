@@ -1,7 +1,5 @@
 package com.jpmc.json
 
-import com.jpmc.json.JsonSeparators._
-
 sealed trait Json extends Product with Serializable
 
 object Json {
@@ -28,28 +26,28 @@ object Json {
 
   def apply(data: Json*): Doc = Array(data.toList)
 
-  def prettyPrint(json: Json): java.lang.String = {
+  def prettyPrint(json: Json): java.lang.String =
     json match {
       case jsonDoc: Doc => prettyPrintDoc(jsonDoc)
-      case Json.String(str) => quotes + str + quotes
+      case Json.String(str) => "\"" + str + "\""
       case Json.Boolean(bool) => bool.toString
       case Json.Number(num) => num.toString
       case Json.Null => "null"
     }
-  }
 
-  private def prettyPrintDoc(jsonDoc: Doc): java.lang.String = {
+  private def prettyPrintDoc(jsonDoc: Doc): java.lang.String =
     jsonDoc match {
       case Array(data) =>
-        data.map(prettyPrint).mkString(openSquare, commaSep, closeSquare)
+        data.map(prettyPrint).mkString("[", ",", "]")
       case Object(data) =>
         data.map {
-          case (key, value) => s"$quotes$key$quotes$colon${prettyPrint(value)}"
-        }.mkString(openCurly, commaSep, closeCurly)
+          case (key, value) => val quote = "\""
+            s"$quote$key$quote:${prettyPrint(value)}"
+        }.mkString("{", ",", "}")
     }
-  }
 
-  def removeNullValues(jsonDoc: Doc): Doc = {
+
+  def removeNullValues(jsonDoc: Doc): Doc =
     jsonDoc match {
       case Array(_) => jsonDoc
       case Object(data) => Object(data = data.collect {
@@ -57,14 +55,4 @@ object Json {
         case (key, json: Json) if json != Null => key -> json
       })
     }
-  }
-}
-object JsonSeparators {
-  val commaSep = ", "
-  val openSquare = "["
-  val closeSquare = "]"
-  val quotes = "\""
-  val colon = ": "
-  val openCurly = "{"
-  val closeCurly = "}"
 }
