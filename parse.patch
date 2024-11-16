@@ -1,0 +1,42 @@
+Index: language/src/main/scala/LanguageParser.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/language/src/main/scala/LanguageParser.scala b/language/src/main/scala/LanguageParser.scala
+new file mode 100644
+--- /dev/null	(revision 93ba118ea7b248dedbf8b25ce0fc7e696a106ba0)
++++ b/language/src/main/scala/LanguageParser.scala	(revision 93ba118ea7b248dedbf8b25ce0fc7e696a106ba0)
+@@ -0,0 +1,6 @@
++
++object LanguageParser {
++  def from[A](f: String => Result[A]): Parser[A] = new Parser[A] {
++    override def parse(input: String): Result[A] = f(input)
++  }
++}
+\ No newline at end of file
+Index: language/src/test/scala/LanguageParserTests.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/language/src/test/scala/LanguageParserTests.scala b/language/src/test/scala/LanguageParserTests.scala
+new file mode 100644
+--- /dev/null	(revision 93ba118ea7b248dedbf8b25ce0fc7e696a106ba0)
++++ b/language/src/test/scala/LanguageParserTests.scala	(revision 93ba118ea7b248dedbf8b25ce0fc7e696a106ba0)
+@@ -0,0 +1,14 @@
++import org.scalatest.freespec.AnyFreeSpec
++import LanguageAST._
++import Expr._
++import com.jpmc.parsecs.Result._
++
++class LanguageParserTests extends AnyFreeSpec {
++    "Parse values" in {
++      val nums = Num(123)
++      val str = pprint(nums)
++      val parsed = LanguageParser.num.parse(str)
++      val expected = Success(nums, "")
++      assert(expected == parsed)
++    }
++}
+\ No newline at end of file

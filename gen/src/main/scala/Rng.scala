@@ -5,7 +5,7 @@ object Rng {
   private val intsCount = (Int.MaxValue.toLong - Int.MinValue.toLong).toDouble
 
   def nextSeed(seed: Long): Long =
-    (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
+    (seed * 0x5deece66dL + 0xbL) & 0xffffffffffffL
 
   def nextInt(seed: Long): (Int, Long) = {
     val next = nextSeed(seed)
@@ -16,7 +16,7 @@ object Rng {
 
   def nextInt(seed: Long, min: Int, max: Int): (Int, Long) = {
     val (i, nextSeed) = nextInt(seed)
-    val length        = (max.toLong - min.toLong)
+    val length        = max.toLong - min.toLong
 
     (((i - Int.MinValue.toLong) / intsCount * length + min).toInt, nextSeed)
   }
