@@ -28,11 +28,11 @@ object Json {
 
   def prettyPrint(json: Json): java.lang.String =
     json match {
-      case jsonDoc: Doc => prettyPrintDoc(jsonDoc)
-      case Json.String(str) => "\"" + str + "\""
+      case jsonDoc: Doc       => prettyPrintDoc(jsonDoc)
+      case Json.String(str)   => "\"" + str + "\""
       case Json.Boolean(bool) => bool.toString
-      case Json.Number(num) => num.toString
-      case Json.Null => "null"
+      case Json.Number(num)   => num.toString
+      case Json.Null          => "null"
     }
 
   private def prettyPrintDoc(jsonDoc: Doc): java.lang.String =
@@ -40,19 +40,21 @@ object Json {
       case Array(data) =>
         data.map(prettyPrint).mkString("[", ",", "]")
       case Object(data) =>
-        data.map {
-          case (key, value) => val quote = "\""
+        data
+          .map { case (key, value) =>
+            val quote = "\""
             s"$quote$key$quote:${prettyPrint(value)}"
-        }.mkString("{", ",", "}")
+          }
+          .mkString("{", ",", "}")
     }
-
 
   def removeNullValues(jsonDoc: Doc): Doc =
     jsonDoc match {
       case Array(_) => jsonDoc
-      case Object(data) => Object(data = data.collect {
-        case (key, obj: Json.Object) => key -> removeNullValues(obj)
-        case (key, json: Json) if json != Null => key -> json
-      })
+      case Object(data) =>
+        Object(data = data.collect {
+          case (key, obj: Json.Object)           => key -> removeNullValues(obj)
+          case (key, json: Json) if json != Null => key -> json
+        })
     }
 }

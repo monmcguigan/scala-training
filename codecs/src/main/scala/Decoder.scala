@@ -28,7 +28,7 @@ object Decoder {
   private def fromPartial[A](pf: PartialFunction[Json, DecoderResult[A]]): Decoder[A] = (j: Json) =>
     pf.lift.apply(j) match {
       case Some(json) => json
-      case None => Left(DecoderErr("No decoder found, match error."))
+      case None       => Left(DecoderErr("No decoder found, match error."))
     }
 
   implicit class DecoderOps(value: Json) {
@@ -36,43 +36,45 @@ object Decoder {
   }
   implicit class DocDecoderOps(jsonObj: Json.Object) {
     def decodeMap[A](key: String)(implicit decoder: Decoder[A]): DecoderResult[A] =
-      jsonObj.data.get(key)
-        .toRight(DecoderErr(s"Unable to find value at key = ${key}"))
+      jsonObj.data
+        .get(key)
+        .toRight(DecoderErr(s"Unable to find value at key = $key"))
         .flatMap(_.as[A])
   }
 
-  implicit val stringDecoder: Decoder[String] = fromPartial {
-    case Json.String(str) => Right(str)
+  implicit val stringDecoder: Decoder[String] = fromPartial { case Json.String(str) =>
+    Right(str)
   }.withErr("Could not decode String")
 
-  implicit val intDecoder: Decoder[Int] = fromPartial {
-    case Json.Number(num) => Right(num)
+  implicit val intDecoder: Decoder[Int] = fromPartial { case Json.Number(num) =>
+    Right(num)
   }.withErr("Could not decode Int")
 
-  implicit val boolDecoder: Decoder[java.lang.Boolean] = fromPartial {
-    case Json.Boolean(bool) => Right(bool)
+  implicit val boolDecoder: Decoder[java.lang.Boolean] = fromPartial { case Json.Boolean(bool) =>
+    Right(bool)
   }.withErr("Could not decode Boolean")
 
-  implicit val dateDecoder: Decoder[LocalDate] = fromPartial {
-    case Json.String(str) => Try(LocalDate.parse(str)) match {
-      case Failure(exp) => Left(DecoderErr(s"Failure to parse Local date time: ${str}, with exception ${exp.getMessage}"))
+  implicit val dateDecoder: Decoder[LocalDate] = fromPartial { case Json.String(str) =>
+    Try(LocalDate.parse(str)) match {
+      case Failure(exp) => Left(DecoderErr(s"Failure to parse Local date time: $str, with exception ${exp.getMessage}"))
       case Success(value) => Right(value)
     }
   }
 
-  implicit def tuple2Decoder[A: Decoder, B: Decoder]: Decoder[Tuple2[A, B]] = fromPartial {
-    case obj: Json.Object => for {
+  implicit def tuple2Decoder[A: Decoder, B: Decoder]: Decoder[Tuple2[A, B]] = fromPartial { case obj: Json.Object =>
+    for {
       val1 <- obj.decodeMap[A]("1")
       val2 <- obj.decodeMap[B]("2")
     } yield (val1, val2)
   }.withErr("Could not decode Tuple 2")
 
   implicit def tuple3Decoder[A: Decoder, B: Decoder, C: Decoder]: Decoder[Tuple3[A, B, C]] = fromPartial {
-    case obj: Json.Object => for {
-      val1 <- obj.decodeMap[A]("1")
-      val2 <- obj.decodeMap[B]("2")
-      val3 <- obj.decodeMap[C]("3")
-    } yield (val1, val2, val3)
+    case obj: Json.Object =>
+      for {
+        val1 <- obj.decodeMap[A]("1")
+        val2 <- obj.decodeMap[B]("2")
+        val3 <- obj.decodeMap[C]("3")
+      } yield (val1, val2, val3)
   }.withErr("Could not decode Tuple 3")
 
   implicit def eitherDecoder[A: Decoder, B: Decoder]: Decoder[Either[A, B]] = fromPartial {
@@ -93,21 +95,19 @@ object Decoder {
   // G = DecoderResult
 
   // tail rec
-  implicit def listDecoder[A: Decoder]: Decoder[List[A]] = fromPartial {
-    case Json.Array(data) =>
-      @tailrec
-      def loop(resList: List[Json], acc: List[A]): DecoderResult[List[A]] = {
-        resList match {
-          case Nil => Right(acc)
-          case head :: tail =>
-            head.as[A] match {
-              case Right(value) => loop(tail, acc :+ value)
-              case Left(_) => Left(DecoderErr("Could not decode Json Array to List"))
-            }
-        }
+  implicit def listDecoder[A: Decoder]: Decoder[List[A]] = fromPartial { case Json.Array(data) =>
+    @tailrec
+    def loop(resList: List[Json], acc: List[A]): DecoderResult[List[A]] =
+      resList match {
+        case Nil => Right(acc)
+        case head :: tail =>
+          head.as[A] match {
+            case Right(value) => loop(tail, acc :+ value)
+            case Left(_)      => Left(DecoderErr("Could not decode Json Array to List"))
+          }
       }
-      val initialList = List.empty[A]
-      loop(data, initialList)
+    val initialList = List.empty[A]
+    loop(data, initialList)
   }
 
   // foldLeft
@@ -125,23 +125,23 @@ object Decoder {
   // try to implement fold left in terms of fold right - chapter 3 red book
   // fold is like a generalised version of natural recursion
 
-  implicit def vectorDecoder[A: Decoder]: Decoder[Vector[A]] = listDecoder[A].withErr("Could not decode Json Array to Vector").map(_.toVector)
+  implicit def vectorDecoder[A: Decoder]: Decoder[Vector[A]] =
+    listDecoder[A].withErr("Could not decode Json Array to Vector").map(_.toVector)
 
-  implicit val userDecoder: Decoder[User] = fromPartial {
-    case o: Json.Object => for {
+  implicit val userDecoder: Decoder[User] = fromPartial { case o: Json.Object =>
+    for {
       name <- o.decodeMap[String]("name")
-      age <- o.decodeMap[Int]("age")
+      age  <- o.decodeMap[Int]("age")
       kind <- o.decodeMap[User.Kind]("kind")
     } yield User(name, age, kind)
   }.withErr("Could not decode Json Object to User")
 
-  implicit val kindDecoder: Decoder[User.Kind] = fromPartial {
-    case Json.String(str) =>
-      str match {
-        case "Privileged" => Right(User.Kind.Privileged)
-        case "Normal" => Right(User.Kind.Normal)
-        case "Guest" => Right(User.Kind.Guest)
-        case _ => Left(DecoderErr("Unable to decode to Kind"))
-      }
+  implicit val kindDecoder: Decoder[User.Kind] = fromPartial { case Json.String(str) =>
+    str match {
+      case "Privileged" => Right(User.Kind.Privileged)
+      case "Normal"     => Right(User.Kind.Normal)
+      case "Guest"      => Right(User.Kind.Guest)
+      case _            => Left(DecoderErr("Unable to decode to Kind"))
+    }
   }
 }
