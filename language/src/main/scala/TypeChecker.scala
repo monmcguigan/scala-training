@@ -28,7 +28,7 @@ object TypeChecker {
     case Expr.Let(name, value, body)              => checkLet(name, value, body, env)
     case Expr.LetRec(name, value, valueTpe, body) => checkLetRec(name, value, valueTpe, body, env)
     case Expr.Var(name)                           => checkVar(name, env)
-    case Expr.Function(name, paramTpe, body)        => checkLambda(name, paramTpe, body, env)
+    case Expr.Function(name, paramTpe, body)      => checkLambda(name, paramTpe, body, env)
     case Expr.Apply(func, arg)                    => checkApply(func, arg, env)
     case Expr.Gt(lhs, rhs)                        => checkGt(lhs, rhs, env)
 

@@ -7,7 +7,7 @@ object BuildPlugin extends AutoPlugin {
   override def requires = JvmPlugin
 
   override lazy val projectSettings = Seq(
-    scalaVersion := "3.3.3",
+    scalaVersion := "3.6.4",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding",
