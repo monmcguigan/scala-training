@@ -2,14 +2,13 @@ import Expr.*
 
 object Main extends App {
   val env = Env.empty
-scala.Ordering
-// let x = 1 in          
-//    (let x = 2 in x) + x 
+  scala.Ordering
+// let x = 1 in
+//    (let x = 2 in x) + x
   val checkScope =
     Let(name = "x", value = Num(1), body = Plus(Let(name = "x", value = Num(2), body = Var("x")), Var("x")))
   println(pprintVal(interpret(checkScope, env)))
   // this gives us 3 as expected
-  
 
   // let rec sum = lower -> upper -> let foo = 1 in
   //  if lower > upper then 0
@@ -42,9 +41,9 @@ scala.Ordering
     body = Apply(Apply(Var("sum"), Num(1)), Num(10))
   )
 
-    println(pprint(checkList))
-    println("=")
-    println(pprintVal(interpret(checkList, env)))
+  println(pprint(checkList))
+  println("=")
+  println(pprintVal(interpret(checkList, env)))
 //
 //  val typedLetRec = LetRec(
 //    name = "sum",
